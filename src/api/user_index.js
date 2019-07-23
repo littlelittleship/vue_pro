@@ -13,10 +13,44 @@ export const login = (data) => {
     data
   })
 }
-
+// 获取所有用户数据
 export const getAllUserList = (params) => {
   return axios({
     url: 'users',
+    // get方法用params
     params
+  })
+}
+
+export const addUser = (data) => {
+  return axios({
+    url: 'users',
+    method: 'post',
+    // post方法用data
+    data
+  })
+}
+
+export const delUserById = (id) => {
+  return axios({
+    url: `users/${id}`,
+    // delete是用拼接参数方式传递的
+    method: 'delete'
+  })
+}
+
+export const editUser = (data) => {
+  return axios({
+    // 每次都没写s，注意是users
+    url: `users/${data.id}`,
+    method: 'put',
+    data: { email: data.email, mobile: data.mobile }
+  })
+}
+
+export const updateUserState = (uid, type) => {
+  return axios({
+    url: `users/${uid}/state/${type}`,
+    method: 'put'
   })
 }

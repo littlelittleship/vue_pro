@@ -2,7 +2,7 @@
 import axios from 'axios'
 // 设置基准路径，根据接口文档
 axios.defaults.baseURL = 'http://localhost:8888/api/private/v1/'
-
+// 添加请求拦截器
 axios.interceptors.request.use(function (config) {
   var token = localStorage.getItem('itcast_manage_token')
   config.headers['Authorization'] = token
