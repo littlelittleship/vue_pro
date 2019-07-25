@@ -47,13 +47,13 @@
       </template>
     </el-table-column>
 
-      <el-table-column label="操作" width="280">
+      <el-table-column label="操作" >
         <template slot-scope="scope">
             <el-tooltip class="item" effect="dark" content="编辑" placement="left">
                 <el-button type="primary" icon='el-icon-edit' @click="showEditDialog(scope.row)"></el-button>
             </el-tooltip>
             <el-tooltip class="item" effect="dark" content="分配角色" placement="top">
-                <el-button type="primary" icon='el-icon-loading'></el-button>
+                <el-button type="primary" icon='el-icon-loading' @click="showGrantDialog(scope.row)"></el-button>
             </el-tooltip>
             <el-tooltip class="item" effect="dark" content="删除" placement="right">
                 <el-button type="primary" icon='el-icon-close' @click="del(scope.row.id)"></el-button>
@@ -101,7 +101,7 @@
     <!-- 这里要添加两个属性，：model就不算了，：rules用来指定规则，ref用来获取当前元素，用于方法中
     对表单元素进行校验的时候，获取当前表单元素 -->
     <el-form :model="editform" :rules="rules" ref="editform">
-      <el-form-item label="用户名" :label-width="formLabelWidth" prop="username" >
+      <el-form-item label="用户名" :label-width="formLabelWidth" >
         <el-input v-model="editform.username" auto-complete="off" style="width:80px" disabled></el-input>
       </el-form-item>
       <el-form-item label="邮箱" :label-width="formLabelWidth" prop="email">
@@ -111,17 +111,44 @@
         <el-input v-model="editform.mobile" auto-complete="off"></el-input>
       </el-form-item>
     </el-form>
-  <div slot="footer" class="dialog-footer">
-    <el-button @click="editdialogFormVisible = false">取 消</el-button>
-    <el-button type="primary" @click="editsubmit">确 定</el-button>
-  </div>
+    <div slot="footer" class="dialog-footer">
+      <el-button @click="editdialogFormVisible = false">取 消</el-button>
+      <el-button type="primary" @click="editsubmit">确 定</el-button>
+    </div>
   </el-dialog>
+
+  <el-dialog title="分配角色" :visible.sync="roledialogFormVisible">
+   <!--  这里要添加两个属性，：model就不算了，：rules用来指定规则，ref用来获取当前元素，用于方法中
+    对表单元素进行校验的时候，获取当前表单元素 -->
+    <el-form :model="grantform" ref="grantform">
+      <el-form-item label="用户名" :label-width="formLabelWidth" >
+        <span>{{grantform.username}}</span>
+      </el-form-item>
+      <el-form-item label="角色" :label-width="formLabelWidth">
+        <!-- v-model的值是当前被选中的option的value值 -->
+        <el-select v-model="grantform.rid" clearable placeholder="请选择">
+          <el-option
+            v-for="item in roleList"
+            :key="item.id"
+            :label="item.roleName"
+            :value="item.id">
+          </el-option>
+        </el-select>
+      </el-form-item>
+    </el-form>
+    <div slot="footer" class="dialog-footer">
+      <el-button @click="roledialogFormVisible = false">取 消</el-button>
+      <el-button type="primary" @click="grantrole">确 定</el-button>
+    </div>
+  </el-dialog>
+
  </div>
 
 </template>
 
 <script>
-import { getAllUserList, addUser, delUserById, editUser, updateUserState } from '@/api/user_index.js'
+import { getAllUserList, addUser, delUserById, editUser, updateUserState, grantUserRole } from '@/api/user_index.js'
+import { getAllRoleList } from '@/api/role_index.js'
 export default {
   data () {
     return {
@@ -141,6 +168,14 @@ export default {
           { pattern: /^1\d{10}$/, message: '请输入合法的手机号', trigger: 'blur' }
         ]
       },
+      roleList: [],
+      grantform: {
+        id: '',
+        username: '',
+        rid: '',
+        role_name: ''
+      },
+      roledialogFormVisible: false,
       dialogFormVisible: false,
       editdialogFormVisible: false,
       editform: {
@@ -198,6 +233,41 @@ export default {
           return false
         }
       })
+    },
+
+    async grantrole (row) {
+      if (!this.grantform.rid) {
+        this.$message({
+          message: '请选择一个角色',
+          type: 'info'
+        })
+      } else {
+        let res = await grantUserRole(this.grantform)
+        if (res.data.meta.status === 200) {
+          this.$message({
+            message: '角色设置成功',
+            type: 'success'
+          })
+          this.roledialogFormVisible = false
+          this.init()
+        } else {
+          this.$message({
+            message: '角色设置失败',
+            type: 'error'
+          })
+          this.roledialogFormVisible = false
+        }
+      }
+    },
+
+    // 显示分配角色对话框
+    showGrantDialog (row) {
+      // console.log(row)
+      this.roledialogFormVisible = true
+      this.grantform.username = row.username
+      this.grantform.id = row.id
+      this.grantform.rid = row.rid
+      this.grantform.role_name = row.role_name
     },
 
     // 改变用户状态，调用方法时，前面加async，在返回结果前面加await，配套使用
@@ -304,6 +374,11 @@ export default {
       this.userobj.pagenum = val
       this.init()
     },
+    async roleInit () {
+      let res = await getAllRoleList()
+      console.log(res)
+      this.roleList = res.data.data
+    },
     init () {
       getAllUserList(this.userobj)
         .then(res => {
@@ -321,6 +396,7 @@ export default {
   },
   mounted () {
     this.init()
+    this.roleInit()
   }
 }
 </script>

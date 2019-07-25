@@ -40,7 +40,7 @@ export default {
         if (valid) {
           login(this.loginForm)
             .then(res => {
-              console.log(res)
+              // console.log(res)
               if (res.data.meta.status === 200) {
                 // 路由跳转之后先保存token数据到本地存储,然后在main.js中添加导航守卫
                 localStorage.setItem('itcast_manage_token', res.data.data.token)
