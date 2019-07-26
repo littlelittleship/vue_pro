@@ -376,7 +376,7 @@ export default {
     },
     async roleInit () {
       let res = await getAllRoleList()
-      console.log(res)
+      // console.log(res)
       this.roleList = res.data.data
     },
     init () {
